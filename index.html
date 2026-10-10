@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConvertLab</title>
+<meta name="description" content="Fast, precise unit conversion and software engineering tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-page product site — nav, hero, live converter, field calculators, last-10 history, pricing */
+:root{
+  --bg:#eef2f5; --sheet:#ffffff; --grid:#dde5ec; --fg:#14212b; --muted:#5b6b78;
+  --line:#c9d4dd; --accent:#1d5d8c; --accent-soft:#e2edf6; --warn:#a4501b;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1820; --sheet:#16222c; --grid:#1a2731; --fg:#e4ecf2; --muted:#93a4b2;
+  --line:#2b3b48; --accent:#6fb1e3; --accent-soft:#1c3346; --warn:#e8945a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1820; --sheet:#16222c; --grid:#1a2731; --fg:#e4ecf2; --muted:#93a4b2;
+  --line:#2b3b48; --accent:#6fb1e3; --accent-soft:#1c3346; --warn:#e8945a; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:18px;padding-block:12px;flex-wrap:wrap}
+.logo{font:800 20px var(--display);color:var(--fg);text-decoration:none;margin-right:auto}
+.logo span{color:var(--accent)}
+nav a.nl{color:var(--muted);text-decoration:none;font-weight:500;font-size:14px}
+nav a.nl:hover{color:var(--accent)}
+.iconbtn{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:5px 10px;cursor:pointer;font:500 13px var(--body)}
+.hero{padding-block:56px 36px}
+.eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,58px);letter-spacing:-.025em;line-height:1.02;margin:10px 0 14px;text-wrap:balance;max-width:16ch}
+h1 span{color:var(--accent)}
+.hero p{color:var(--muted);font-size:17px;max-width:52ch;margin:0 0 22px}
+section{padding-block:28px}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,3.4vw,32px);margin:4px 0 6px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 18px;max-width:60ch}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:22px}
+.btn{display:inline-block;font:600 14px var(--body);border-radius:6px;padding:10px 18px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--sheet);text-decoration:none}
+.btn.ghost{background:transparent;color:var(--accent)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.chip{font:500 14px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 14px;cursor:pointer}
+.chip small{font-family:var(--mono);color:var(--muted);margin-left:6px;font-size:11px}
+.chip[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.chip[aria-selected="true"] small{color:inherit;opacity:.8}
+.conv{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:end}
+@media (max-width:640px){.conv{grid-template-columns:minmax(0,1fr)}.swap{justify-self:center;transform:rotate(90deg)}}
+label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:500;color:var(--muted)}
+.inp{display:flex;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow:hidden}
+.inp input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:500 18px var(--mono);padding:11px 12px}
+.inp input:focus{outline:none}.inp:focus-within{border-color:var(--accent)}
+.inp .u{font:13px var(--mono);color:var(--muted);padding:0 10px;display:flex;align-items:center;border-left:1px solid var(--line)}
+.inp select{border:0;border-left:1px solid var(--line);background:transparent;color:var(--fg);font:14px var(--mono);padding:0 8px;max-width:48%}
+.inp input[readonly]{color:var(--accent)}
+.swap{width:44px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);color:var(--accent);font-size:20px;cursor:pointer}
+.alltbl{margin-top:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font:14px var(--mono);font-variant-numeric:tabular-nums}
+td{padding:7px 10px;border-top:1px solid var(--line)}
+td:first-child{color:var(--muted);width:40%}
+tr.on td{color:var(--accent);font-weight:500}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+h3{font-family:var(--display);font-weight:600;font-size:20px;margin:2px 0 2px}
+.formula{font-family:var(--mono);color:var(--accent);font-size:15px;margin:0 0 16px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.fields .inp input{font-size:16px;padding:9px 10px}
+.solo{border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);padding:10px;font:15px var(--mono)}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.res{background:var(--accent-soft);padding:12px 14px}
+.res .k{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.res .v{font:500 22px var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.res .v em{font-style:normal;font-size:14px;color:var(--muted);margin-left:4px}
+.res.main .v{color:var(--accent)}
+.note{font-size:13px;color:var(--muted);margin:14px 0 0;max-width:65ch}
+.msg{color:var(--warn);font-size:13px;min-height:20px;margin:10px 0 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.seg button{font:500 13px var(--mono);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:20px;padding:5px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.hhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.link{background:none;border:0;color:var(--accent);font:500 13px var(--body);cursor:pointer;padding:4px}
+ol.hist{list-style:none;margin:0;padding:0}
+ol.hist li{border-top:1px solid var(--line);padding:9px 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px}
+.tag{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 5px;align-self:start;margin-top:2px;min-width:52px;text-align:center}
+.hsum{font:13px var(--mono);overflow-wrap:anywhere}
+.htime{grid-column:2;font-size:11px;color:var(--muted)}
+.empty{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:10px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.plan{display:flex;flex-direction:column;gap:10px}
+.plan.pro{border:2px solid var(--accent)}
+.price{font:800 38px var(--display)}.price small{font:500 15px var(--body);color:var(--muted)}
+.badge{align-self:flex-start;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:var(--sheet);border-radius:3px;padding:2px 7px}
+.plan ul{margin:0;padding-left:18px;color:var(--fg)}.plan li{margin:3px 0}
+.plan .btn{margin-top:auto;text-align:center}
+footer{padding-block:28px 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:20px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="logo" href="#top">⇄ Convert<span>Lab</span></a>
+  <a class="nl" href="#converter">Converter</a>
+  <a class="nl" href="#tools">Field tools</a>
+  <a class="nl" href="#pricing">Pricing</a>
+  <button class="iconbtn" id="theme" aria-label="Toggle dark mode">◐ Theme</button>
+</div></nav>
+
+<div class="wrap" id="top">
+  <header class="hero">
+    <div class="eyebrow">Built for engineers</div>
+    <h1>Unit conversion, <span>engineered.</span></h1>
+    <p>Length, mass, pressure, energy, temperature and data size with exact factors, plus everyday tools for software engineers.</p>
+    <a class="btn" href="#converter">Start converting</a>
+  </header>
+
+  <section id="converter">
+    <div class="eyebrow">Mission 1</div>
+    <h2>Converter</h2>
+    <p class="sub">Results update as you type. Every conversion lands in your history.</p>
+    <div class="panel">
+      <div class="chips" role="tablist" id="cats"></div>
+      <div class="conv">
+        <label for="fromVal">From<span class="inp"><input id="fromVal" type="number" step="any" value="1"><select id="fromU" aria-label="From unit"></select></span></label>
+        <button class="swap" id="swap" aria-label="Swap units">⇄</button>
+        <label for="toVal">To<span class="inp"><input id="toVal" type="text" readonly><select id="toU" aria-label="To unit"></select></span></label>
+      </div>
+      <div class="alltbl"><table><tbody id="all"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tools">
+    <div class="eyebrow">Mission 2</div>
+    <h2>Build for your field</h2>
+    <p class="sub">Software engineering tools: number bases, transfer times and Unix timestamps. Your last 10 conversions stay on the right.</p>
+    <div class="split">
+      <div class="panel">
+        <div class="chips" role="tablist" id="ftabs"></div>
+        <div id="tool"></div>
+        <p class="msg" id="msg" role="status"></p>
+      </div>
+      <aside class="panel" aria-label="History">
+        <div class="hhead"><h3>History · last 10</h3><button class="link" id="clear">Clear</button></div>
+        <ol class="hist" id="hist"></ol>
+      </aside>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2>Simple pricing</h2>
+    <p class="sub">Start free. Upgrade when your work needs more.</p>
+    <div class="plans">
+      <div class="panel plan">
+        <h3>Student</h3>
+        <div class="price">$0 <small>/ month</small></div>
+        <ul><li>All 6 unit categories</li><li>3 software tools</li><li>Last 10 history</li><li>Works on any device</li></ul>
+        <a class="btn ghost" href="#converter">Get started</a>
+      </div>
+      <div class="panel plan pro">
+        <span class="badge">Popular</span>
+        <h3>Pro</h3>
+        <div class="price">$4 <small>/ month</small></div>
+        <ul><li>Everything in Student</li><li>Unlimited history and export</li><li>Custom units and precision</li><li>Priority support</li></ul>
+        <a class="btn" href="#pricing">Go Pro</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 2026 ConvertLab. Conversion factors based on SI and NIST definitions. KB/MB/GB are decimal (SI); KiB/MiB/GiB are binary (IEC).</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = (x, d = 4) => {
+  if (!isFinite(x)) return "—";
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-4 || a >= 1e9)) return x.toExponential(4);
+  return Number(x.toPrecision(d + 3)).toLocaleString("en-US", { maximumFractionDigits: d });
+};
+
+/* ---------- History (last 10, this browser only) ---------- */
+const KEY = "convertlab-history";
+let hist = [];
+try { hist = JSON.parse(localStorage.getItem(KEY)) || []; } catch { hist = []; }
+function drawHist() {
+  $("#hist").innerHTML = hist.length
+    ? hist.map(h => `<li><span class="tag">${h.tag}</span><span class="hsum">${h.sum}</span><span class="htime">${h.t}</span></li>`).join("")
+    : `<li class="empty">No conversions yet. Use the converter or a field tool and they appear here.</li>`;
+}
+function logHist(tag, sum) {
+  if (hist[0] && hist[0].sum === sum) return;
+  hist.unshift({ tag, sum, t: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+  hist = hist.slice(0, 10);
+  try { localStorage.setItem(KEY, JSON.stringify(hist)); } catch {}
+  drawHist();
+}
+let logTimer;
+const logSoon = (tag, sum) => { clearTimeout(logTimer); logTimer = setTimeout(() => logHist(tag, sum), 1200); };
+$("#clear").onclick = () => { hist = []; try { localStorage.removeItem(KEY); } catch {} drawHist(); };
+
+/* ---------- Mission 1: unit converter ---------- */
+const CATS = {
+  Length: { m: 1, km: 1000, cm: .01, mm: .001, in: .0254, ft: .3048, yd: .9144, mi: 1609.344 },
+  Mass: { kg: 1, g: .001, t: 1000, lb: .45359237, oz: .028349523125 },
+  Pressure: { Pa: 1, kPa: 1e3, MPa: 1e6, bar: 1e5, atm: 101325, psi: 6894.757293, mmHg: 133.322387 },
+  Energy: { J: 1, kJ: 1e3, kWh: 3.6e6, cal: 4.184, kcal: 4184, BTU: 1055.05585, eV: 1.602176634e-19 },
+  Temperature: { "°C": 0, "°F": 0, K: 0 },
+  "Data size": { bit: .125, B: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12, KiB: 1024, MiB: 2 ** 20, GiB: 2 ** 30, TiB: 2 ** 40 }
+};
+const DEF = { Length: ["m", "ft"], Mass: ["kg", "lb"], Pressure: ["bar", "psi"], Energy: ["kWh", "J"], Temperature: ["°C", "°F"], "Data size": ["GB", "GiB"] };
+const toK = { "°C": c => c + 273.15, "°F": f => (f - 32) * 5 / 9 + 273.15, K: k => k };
+const fromK = { "°C": k => k - 273.15, "°F": k => (k - 273.15) * 9 / 5 + 32, K: k => k };
+let cat = "Length";
+const convert = (x, a, b) => cat === "Temperature" ? fromK[b](toK[a](x)) : x * CATS[cat][a] / CATS[cat][b];
+
+function drawCats() {
+  $("#cats").innerHTML = Object.keys(CATS).map(c => `<button class="chip" role="tab" data-c="${c}" aria-selected="${c === cat}">${c}</button>`).join("");
+  const opts = Object.keys(CATS[cat]).map(u => `<option>${u}</option>`).join("");
+  $("#fromU").innerHTML = opts; $("#toU").innerHTML = opts;
+  $("#fromU").value = DEF[cat][0]; $("#toU").value = DEF[cat][1];
+}
+function runConv(log = true) {
+  const x = parseFloat($("#fromVal").value), a = $("#fromU").value, b = $("#toU").value;
+  if (!isFinite(x)) { $("#toVal").value = ""; $("#all").innerHTML = ""; return; }
+  const y = convert(x, a, b);
+  $("#toVal").value = fmt(y, 6);
+  $("#all").innerHTML = Object.keys(CATS[cat]).map(u => `<tr class="${u === b ? "on" : ""}"><td>${u}</td><td>${fmt(convert(x, a, u), 6)}</td></tr>`).join("");
+  if (log) logSoon(cat === "Data size" ? "Data" : cat.slice(0, 5), `${fmt(x, 6)} ${a} → ${fmt(y, 6)} ${b}`);
+}
+$("#cats").onclick = e => { const c = e.target.closest(".chip"); if (!c) return; cat = c.dataset.c; drawCats(); runConv(); };
+["fromVal", "fromU", "toU"].forEach(id => document.getElementById(id).addEventListener("input", () => runConv()));
+$("#swap").onclick = () => {
+  const a = $("#fromU").value; $("#fromU").value = $("#toU").value; $("#toU").value = a; runConv();
+};
+
+/* ---------- Mission 2: field calculators ---------- */
+const num = id => parseFloat(document.getElementById(id).value);
+const sel = id => +document.getElementById(id).value;
+const field = (id, label, val, unit) => `<label for="${id}">${label}<span class="inp"><input id="${id}" type="number" step="any" value="${val}">${unit}</span></label>`;
+const u = t => `<span class="u">${t}</span>`;
+const pick = (id, opts) => `<select id="${id}">${opts.map(([t, v]) => `<option value="${v}">${t}</option>`).join("")}</select>`;
+const res = (k, id, main) => `<div class="res${main ? " main" : ""}"><div class="k">${k}</div><div class="v" id="${id}">—</div></div>`;
+const out = (id, v, unit) => { document.getElementById(id).innerHTML = v + (unit ? `<em>${unit}</em>` : ""); };
+
+const tools = [
+  {
+    key: "base", tab: "Number bases", code: "0b·0x", title: "Number base converter", formula: "binary · octal · decimal · hexadecimal",
+    html: () => `<div class="fields">
+      <label for="bv">Value<span class="inp"><input id="bv" type="text" value="255" spellcheck="false" autocomplete="off"></span></label>
+      <label for="bb">Input base<select class="solo" id="bb"><option value="10">Decimal (10)</option><option value="2">Binary (2)</option><option value="8">Octal (8)</option><option value="16">Hex (16)</option></select></label></div>
+      <div class="results">${res("Binary", "oBin", 1)}${res("Hex", "oHex", 1)}${res("Decimal", "oDec")}${res("Octal", "oOct")}${res("Bits needed", "oBits")}</div>`,
+    run() {
+      const base = sel("bb"), raw = document.getElementById("bv").value.trim().toLowerCase().replace(/^(0x|0b|0o)/, "").replace(/[_\s]/g, "");
+      const ok = { 2: /^[01]+$/, 8: /^[0-7]+$/, 10: /^\d+$/, 16: /^[0-9a-f]+$/ }[base];
+      if (!raw || !ok.test(raw)) return `Enter a non-negative whole number using only base-${base} digits.`;
+      let n = 0n; for (const ch of raw) n = n * BigInt(base) + BigInt(parseInt(ch, 16));
+      const bin = n.toString(2), group = s => s.padStart(Math.ceil(s.length / 4) * 4, "0").replace(/(.{4})(?=.)/g, "$1 ");
+      out("oBin", group(bin)); out("oHex", "0x" + n.toString(16).toUpperCase()); out("oDec", n.toLocaleString("en-US"));
+      out("oOct", "0o" + n.toString(8)); out("oBits", n === 0n ? 1 : bin.length, "bits");
+      return `${raw} (base ${base}) → 0x${n.toString(16).toUpperCase()} = ${n}`;
+    }
+  },
+  {
+    key: "xfer", tab: "Transfer time", code: "size/speed", title: "Download and upload time", formula: "t = size (bits) / bandwidth (bit/s)",
+    html: () => `<div class="fields">
+      ${field("fs", "File size", 4.7, pick("fsu", [["GB", 8e9], ["MB", 8e6], ["TB", 8e12], ["GiB", 8 * 2 ** 30], ["MiB", 8 * 2 ** 20]]))}
+      ${field("bw", "Connection speed", 100, pick("bwu", [["Mbps", 1e6], ["Gbps", 1e9], ["MB/s", 8e6], ["kbps", 1e3]]))}</div>
+      <div class="results">${res("Time", "oT", 1)}${res("Seconds", "oS")}${res("Speed", "oMBs")}</div>
+      <p class="note">Ideal case. Real transfers usually run 10–20% slower because of protocol overhead. Note that network speeds use bits (Mbps) while file sizes use bytes (MB).</p>`,
+    run() {
+      const bits = num("fs") * sel("fsu"), bps = num("bw") * sel("bwu");
+      if (!(bits > 0 && bps > 0)) return "Enter a file size and a speed above zero.";
+      const s = bits / bps, h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+      const txt = h ? `${h}h ${m}m ${Math.round(sec)}s` : m ? `${m}m ${Math.round(sec)}s` : `${fmt(sec, 2)} s`;
+      out("oT", txt); out("oS", fmt(s, 2), "s"); out("oMBs", fmt(bps / 8e6, 2), "MB/s");
+      return `${fmt(num("fs"))} ${document.getElementById("fsu").selectedOptions[0].text} @ ${fmt(num("bw"))} ${document.getElementById("bwu").selectedOptions[0].text} → ${txt}`;
+    }
+  },
+  {
+    key: "unix", tab: "Unix time", code: "epoch", title: "Unix timestamp converter", formula: "seconds since 1970-01-01 00:00:00 UTC", mode: "ts",
+    html() {
+      const seg = `<div class="seg" id="seg"><button data-m="ts" aria-pressed="${this.mode === "ts"}">Timestamp → date</button><button data-m="date" aria-pressed="${this.mode === "date"}">Date → timestamp</button></div>`;
+      const now = new Date(), pad = x => String(x).padStart(2, "0");
+      const local = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const f = this.mode === "ts"
+        ? `${field("ts", "Timestamp", Math.floor(Date.now() / 1000), pick("tsu", [["s", 1000], ["ms", 1]]))}`
+        : `<label for="dt">Local date and time<span class="inp"><input id="dt" type="datetime-local" value="${local}"></span></label>`;
+      return `${seg}<div class="fields">${f}<div style="align-self:end"><button class="btn ghost" id="now" type="button">Use now</button></div></div>
+        <div class="results">${this.mode === "ts" ? res("UTC (ISO 8601)", "oU", 1) + res("Your local time", "oL") : res("Timestamp (s)", "oTs", 1) + res("Timestamp (ms)", "oMs") + res("UTC (ISO 8601)", "oU")}${res("Relative", "oR")}</div>`;
+    },
+    bind() {
+      $("#seg").onclick = e => { const m = e.target.dataset.m; if (m) { this.mode = m; drawTool(); } };
+      $("#now").onclick = () => { this.mode === "ts" ? (document.getElementById("ts").value = Math.floor(Date.now() / (sel("tsu") === 1 ? 1 : 1000)) * 1) : null; if (this.mode !== "ts") drawTool(); runTool(); };
+    },
+    run() {
+      let d;
+      if (this.mode === "ts") { const t = num("ts"); if (!isFinite(t)) return "Enter a timestamp."; d = new Date(t * sel("tsu")); }
+      else { d = new Date(document.getElementById("dt").value); }
+      if (isNaN(d)) return "That date is out of range.";
+      const diff = (d - Date.now()) / 1000, a = Math.abs(diff);
+      const rel = a < 60 ? "just now" : (a < 3600 ? `${Math.round(a / 60)} min` : a < 86400 ? `${fmt(a / 3600, 1)} h` : `${fmt(a / 86400, 1)} days`) + (a < 60 ? "" : diff < 0 ? " ago" : " from now");
+      out("oU", d.toISOString().replace(".000", "")); out("oR", rel);
+      if (this.mode === "ts") { out("oL", d.toLocaleString()); return `${num("ts")} → ${d.toISOString().replace(".000", "")}`; }
+      const s = Math.floor(d / 1000); out("oTs", s); out("oMs", d.getTime());
+      return `${d.toLocaleString()} → ${s}`;
+    }
+  }
+];
+let tool = tools[0];
+function drawTool() {
+  $("#ftabs").innerHTML = tools.map(t => `<button class="chip" role="tab" data-k="${t.key}" aria-selected="${t === tool}">${t.tab}<small>${t.code}</small></button>`).join("");
+  $("#tool").innerHTML = `<h3>${tool.title}</h3><p class="formula">${tool.formula}</p>${tool.html()}`;
+  tool.bind && tool.bind();
+  runTool(false);
+}
+function runTool(log = true) {
+  const r = tool.run();
+  if (typeof r === "string" && !r.includes("→")) {
+    $("#msg").textContent = r; document.querySelectorAll("#tool .res .v").forEach(e => e.textContent = "—");
+  } else { $("#msg").textContent = ""; if (log) logSoon({base:"Base",xfer:"Net",unix:"Time"}[tool.key], r); }
+}
+$("#tool").addEventListener("input", () => runTool());
+$("#ftabs").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; tool = tools.find(t => t.key === b.dataset.k); drawTool(); };
+
+/* ---------- Theme toggle ---------- */
+$("#theme").onclick = () => {
+  const r = document.documentElement, cur = r.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  r.dataset.theme = cur === "dark" ? "light" : "dark";
+  try { localStorage.setItem("convertlab-theme", r.dataset.theme); } catch {}
+};
+try { const t = localStorage.getItem("convertlab-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+
+drawCats(); runConv(false); drawTool(); drawHist();
+</script>
+
+</body>
+</html>
